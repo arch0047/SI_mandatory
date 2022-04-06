@@ -1,0 +1,5 @@
+.venv
+__pycache__
+get_api_key.py
+get_phone.py
+SI_Mandatory.db
