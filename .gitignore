@@ -4,3 +4,4 @@
 /sms
 /__pycache__
 /Lib
+.venv
