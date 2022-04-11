@@ -7,3 +7,4 @@ get_receiver_mail.py
 /sms
 /__pycache__
 /Lib
+.venv
