@@ -5,7 +5,7 @@ import ssl
 import random
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from get_mail import sender_email
+from get_email import sender_email
 from get_password import password
 from get_receiver_mail import receiver_email
 
