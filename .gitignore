@@ -1,5 +1,8 @@
 /get_api_key.py
 /get_phone.py
+get_email.py
+get_password.py
+get_receiver_mail.py
 /SI_Mandatory.db
 /sms
 /__pycache__

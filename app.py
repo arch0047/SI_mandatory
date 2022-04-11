@@ -59,7 +59,7 @@ def get_jwtToken():
         fourDigits = random.randint(1111, 9999)
         print(fourDigits)
 
-        phone = request.forms.get("phone")
+       # phone = request.forms.get("phone")
         print(phone)
 
     try:
