@@ -37,19 +37,16 @@
   <script>
     async function login() {
       let form = document.querySelector("form");
-      let conn = await fetch("/api-login", {
+      let conn = await fetch("/2fa", {
         method: "POST",
         body: new FormData(form),
       });
-      let res = await conn.text();
-      console.log("MITID says:", res);
-      if (res == "NO") {
-        parent.postMessage("NO", "*");
-        return;
+      if (conn.status == 200) {
+        window.location.replace("/secret_page");
+      } else {
+        alert("Wrong code, please try again");
+        window.location.replace("/");
       }
-      // SUCCESS
-      // parent.postMessage("no", "*")
-      parent.postMessage('{"cpr":"1","iat":"1000","exp":"1600"}', "*");
     }
   </script>
 </main>
