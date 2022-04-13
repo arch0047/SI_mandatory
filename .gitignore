@@ -8,3 +8,4 @@ get_receiver_mail.py
 /__pycache__
 /Lib
 .venv
+.env
