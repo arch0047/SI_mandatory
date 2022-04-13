@@ -1,16 +1,19 @@
-from bottle import request, response, view, run, static_file, abort
+from bottle import request, response, view, run, static_file
+import os
 import random
 import jwt, bottle
 from jwt.exceptions import InvalidSignatureError
 from my_persistence import createDB, save_record, evaluate_code
 from send_email import send_email
 
-db_name = "sample.db"
-jwt_secret = "secret"
-algorithm = "HS256"
-sender_email = "satestastos@gmail.com"
-receiver_email = "sagelastos@gmail.com"
-password = "panJr6Ujt4XVwb"
+# READ ENV VARS
+db_name = os.environ.get("db_file_name")
+jwt_secret = os.environ.get("jwt_secret")
+algorithm = os.environ.get("algorithm")
+sender_email = os.environ.get("sender_email")
+receiver_email = os.environ.get("receiver_email")
+password = os.environ.get("password")
+port = os.environ.get("port")
 
 app = bottle.Bottle()
 createDB(db_name)
@@ -88,7 +91,6 @@ def jwt_validate():
         }
 
     try:
-        print(parts[1])
         jwt.decode(parts[1], jwt_secret, algorithm)
         # TODO generate 4 digit code, send email and save email - code pair in DB
         code = random.randint(1000, 9999)
@@ -101,7 +103,6 @@ def jwt_validate():
         )
         return "OK"
     except InvalidSignatureError:
-        print("An exception occurred")
         response.status = 403
         return {
             "code": "invalid_signature",
@@ -109,4 +110,4 @@ def jwt_validate():
         }
 
 
-run(app, host="127.0.0.1", port=3333, debug=True, reloader=True, server="paste")
+run(app, host="127.0.0.1", port=port, debug=True, reloader=True, server="paste")

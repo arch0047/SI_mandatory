@@ -13,7 +13,6 @@ def save_record(db_name, email, code):
     c = conn.cursor()
     c.execute("INSERT INTO records (email,code) VALUES (?,?)", (email, code))
     new_id = c.lastrowid
-    print(f"Just saved record with ID: {new_id}")
     conn.commit()
     c.close()
 
