@@ -1,34 +1,41 @@
-from bottle import request, response, get, post, view, run, static_file
-import jwt
+from bottle import request, response, view, run, static_file 
+import random
+import jwt, bottle
 from jwt.exceptions import InvalidSignatureError
-import time
+from my_persistence import createDB, save_record
+from send_email import send_email
 
+db_name = 'sample.db'
 jwt_secret = "secret"
 algorithm = "HS256"
+sender_email = "satestastos@gmail.com"
+receiver_email = "sagelastos@gmail.com"
+password = "panJr6Ujt4XVwb"
 
+app = bottle.Bottle()
+createDB(db_name)
 
 ##############################
-@get("/images/mitid.png")
-def _():
+@app.get("/images/mitid.png")
+def image():
     return static_file("mitid.png", root="./images")
 
-
 ##############################
-@get("/2fa")
+@app.get('/2fa')
 @view("mitid")
-def _():
+def two_fa():
     return
 
 ##############################
-@get("/")
+@app.get("/")
 @view("jwt_stub")
-def _():
+def index():
     return
 
 
 ##############################
-@post("/api-login")
-def _():
+@app.post("/api-login")
+def jwt_validate():
     auth = request.headers.get('Authorization', None)
     if not auth:
         response.status = 403
@@ -59,6 +66,9 @@ def _():
         print(parts[1])
         jwt.decode(parts[1], jwt_secret, algorithm)
         # TODO generate 4 digit code, send email and save email - code pair in DB
+        code = random.randint(1000,9999)
+        save_record(db_name=db_name, email=receiver_email, code=code)
+        send_email(sender_email=sender_email, password=password, receiver_email=receiver_email, random_auth_code=code)
         return "OK"    
     except InvalidSignatureError:
         print("An exception occurred") 
@@ -68,4 +78,4 @@ def _():
             'description': 'Token signature is not valid'
         }
 
-run(host="127.0.0.1", port=3333, debug=True, reloader=True, server="paste")
+run(app, host="127.0.0.1", port=3333, debug=True, reloader=True, server="paste")
