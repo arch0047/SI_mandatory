@@ -120,10 +120,6 @@ def get_jwtToken():
         message.attach(part1)
         message.attach(part2)
 
-
-
-
-
     # Create secure connection with server and send email (this is a context manager)
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
@@ -133,8 +129,8 @@ def get_jwtToken():
             except Exception as ex:
                 print(ex)
 
-    # database connection
-    # cursor allows us to execute sql queries
+ # database connection
+ # cursor allows us to execute sql queries
    
         db = sqlite3.connect('SI_Mandatory_sendmail.db')
         c = db.cursor()
@@ -161,12 +157,8 @@ def get_jwtToken():
 
         db.close()
         
-
-
 #################
-
-# Token Varification
-
+# 4 digit number Varification
 
 @route("/RandomDigitNumber", method="POST")
 def randomDigits():
