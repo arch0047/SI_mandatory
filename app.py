@@ -2,6 +2,7 @@ from bottle import default_app, get, run, view, request, route, template, respon
 import time
 import random
 import sqlite3
+#from django.shortcuts import render
 import requests
 import jwt
 
@@ -14,7 +15,7 @@ from email.mime.multipart import MIMEMultipart
 from get_email import sender_email
 from get_password import password
 from get_receiver_mail import receiver_email
- 
+
 
 ################
 
@@ -45,8 +46,10 @@ def __():
 #######################
 
 
-# @get("/get_token")
-# @view("token")
+sender_email = sender_email
+receiver_email = receiver_email
+password = password
+
 @route("/get_token", method="POST")
 def get_jwtToken():
     try:
@@ -56,7 +59,6 @@ def get_jwtToken():
 
         print(jwtToken)
         jwt.decode(jwtToken, key="secret", algorithms="HS256")
-
     except:
         print("Invalid Token !")
 #############################################################
@@ -80,96 +82,101 @@ def get_jwtToken():
 #     except:
 #         return req.status_code
 #################################################################################
+ 
+ #Sending the randondigits number to my mail id
 
-sender_email = sender_email
-receiver_email = receiver_email
-password = password
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "multipart test"
+        message["From"] = sender_email
+        message["To"] = receiver_email
 
-message = MIMEMultipart("alternative")
-message["Subject"] = "multipart test"
-message["From"] = sender_email
-message["To"] = receiver_email
+        random_auth_code = str(random.randint(100000, 999999))
+        message_to_user = f"User, your verification code is: {random_auth_code}"
 
-random_auth_code = str(random.randint(100000, 999999))
-message_to_user = f"User, your verification code is: {random_auth_code}"
-
-print(type(message_to_user))
+        print(type(message_to_user))
 
 # Create the plain-text and HTML version of your message
-text = f"""\
-{message_to_user}
-"""
+        text = f"""\
+        {message_to_user}
+        """
 
-html = f"""\
-<html>
-  <body>
-    <p>
-      Dear,<br>
-      <b>{message_to_user}</b><br>
-    </p>
-  </body>
-</html>
-"""
+        html = f"""\
+        <html>
+          <body>
+            <p>
+              Dear,<br>
+              <b>{message_to_user}</b><br>
+            </p>
+          </body>
+        </html>
+        """
 
 # Turn these into plain/html MIMEText objects
-part1 = MIMEText(text, "plain")
-part2 = MIMEText(html, "html")
+        part1 = MIMEText(text, "plain")
+        part2 = MIMEText(html, "html")
 
 # Add HTML/plain-text parts to MIMEMultipart message
 # The email client will try to render the last part first
-message.attach(part1)
-message.attach(part2)
+        message.attach(part1)
+        message.attach(part2)
 
-# Create secure connection with server and send email (this is a context manager)
-context = ssl.create_default_context()
-with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
-    try:
-        server.login(sender_email, password)
-        server.sendmail(sender_email, receiver_email, message.as_string())
-    except Exception as ex:
-        print(ex)
 
+
+
+
+    # Create secure connection with server and send email (this is a context manager)
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+            try:
+                server.login(sender_email, password)
+                server.sendmail(sender_email, receiver_email, message.as_string())
+            except Exception as ex:
+                print(ex)
 
     # database connection
     # cursor allows us to execute sql queries
+   
+        db = sqlite3.connect('SI_Mandatory_sendmail.db')
+        c = db.cursor()
+        db.execute("""CREATE TABLE IF NOT EXISTS randomDigitNumber(
+                id INTEGER PRIMARY KEY NOT NULL,
+                receiver_email VARCHAR(50) NOT NULL,
+                random_auth_code VARCHAR(8))""")
+        print(receiver_email, random_auth_code)
 
-    db = sqlite3.connect('SI_Mandatory_sendmail.db')
-    c = db.cursor()
-    # db.execute("""CREATE TABLE randomDigitNumber(
-    #             id INTEGER PRIMARY KEY,
-    #             receiver_email VARCHAR(50),
-    #             random_auth_code VARCHAR(8))""")
-    # print(receiver_email, random_auth_code)
-    
-    db.execute(
-        f"INSERT INTO randomDigitNumber (receiver_email, random_auth_code) VALUES ({receiver_email}, {random_auth_code})")
-    db.commit()
+        db.execute(
+            "INSERT INTO randomDigitNumber (receiver_email, random_auth_code) VALUES (?,?)", (receiver_email, random_auth_code))
+        db.commit()
 
-    # Show data
+    # Show randon digit number in the page
     #c = db.cursor()
-    c.execute("SELECT * FROM randomDigitNumber  ORDER BY ID DESC LIMIT 1 ")
-    result = c.fetchone()
-    print(result)
-    
-    
-    #return template('code')
+        c.execute("SELECT * FROM randomDigitNumber  ORDER BY ID DESC LIMIT 1 ")
+        result = c.fetchone()
+        print(result)
+        return template('code')
+        
+    else:
+        msg = "Something went wrong !"
+        return msg
 
-db.close()
+        db.close()
+        
 
- #################
 
- # Token Varification
+#################
+
+# Token Varification
 
 
 @route("/RandomDigitNumber", method="POST")
-def randomfourDigits():
+def randomDigits():
     try:
-        otp = request.forms.get("randomfourDigits")
+        otp = request.forms.get("randomDigitNumber")
 
-        db = sqlite3.connect("SI_Mandatory.db")
+        db = sqlite3.connect("SI_Mandatory_sendmail.db")
         c = db.cursor()
         c.execute(
-            f"SELECT * FROM randomDigitNumber WHERE randomfourDigits={otp}")
+            f"SELECT * FROM randomDigitNumber WHERE random_auth_code={otp}")
         print(otp)
         result = c.fetchone()
     except:
