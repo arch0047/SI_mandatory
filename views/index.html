@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>amsolutions</title>
+
+</head>
+
+<body>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/about-us">About Us</a>
+        <a href="/contact-us">Contact Us</a>
+
+
+
+    </nav>
+
+    <main>
+        <iframe src="https://mitid.eu.pythonanywhere.com/" framborder="0" style="height: 18rem">
+
+        </iframe>
+        <script>
+            /* 
+            JWT = 
+            CPR
+            {"cpr" ="2"},
+            "IAT": 1000,
+            "exp": 1600
+            
+            */
+            window.addEventListener("message", event => {
+                console.log("I am in the method")
+                if (event.data == "no")
+                    return
+                console.log(event.data)
+
+                let jwt = {
+                    "cpr": "12345",
+                    "iat": 1646214646,
+                    "exp": 1646215246
+                }
+
+                // pass this to the server via fetch/ajex
+
+                //  else success
+                // send the JWT to your server for validation
+                // SECRET key
+                console.log(event.data)
+            }, false)
+        </script>
+
+
+    </main>
+</body>
+
+</html>
