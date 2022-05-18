@@ -1,13 +1,15 @@
 from bottle import request, response, view, run, static_file
+from dotenv import load_dotenv
 import os
 import random
 import jwt, bottle
+import twofa
 from jwt.exceptions import InvalidSignatureError
-from my_persistence import createDB, save_record, evaluate_code
 from send_email import send_email
 
 # READ ENV VARS
-db_name = os.environ.get("db_file_name")
+load_dotenv()
+mitid_url = os.environ.get("mitid_url")
 jwt_secret = os.environ.get("jwt_secret")
 algorithm = os.environ.get("algorithm")
 sender_email = os.environ.get("sender_email")
@@ -16,55 +18,25 @@ password = os.environ.get("password")
 port = os.environ.get("port")
 
 app = bottle.Bottle()
-createDB(db_name)
-
-##############################
-@app.get("/images/mitid.png")
-def image():
-    return static_file("mitid.png", root="./images")
-
-
-##############################
-@app.post("/2fa")
-@view("two_fa")
-def two_fa():
-    email = request.forms["email"]
-    code = request.forms["code"]
-    if evaluate_code(db_name, email, code):
-        return
-    else:
-        response.status = 403
-        return {
-            "code": "invalid_auth_code",
-            "description": "Wrong authorization code",
-        }
-
-
-##############################
-@app.get("/2fa")
-@view("two_fa")
-def two_fa():
-    return
-
-
-##############################
-@app.get("/secret_page")
-@view("secret_page")
-def two_fa():
-    return
 
 
 ##############################
 @app.get("/")
-@view("jwt_stub")
+@view("index")
 def index():
-    return
+    return dict(mitid_url=mitid_url)
+
+# def validate_jwt(request, response):
+    
+
+# def get_cpr():
 
 
 ##############################
-@app.post("/api-login")
-def jwt_validate():
+@app.post("/validate")
+def _():
     auth = request.headers.get("Authorization", None)
+    print(f"AUTH {auth}")
     if not auth:
         response.status = 403
         return {
@@ -94,13 +66,13 @@ def jwt_validate():
         jwt.decode(parts[1], jwt_secret, algorithm)
         # TODO generate 4 digit code, send email and save email - code pair in DB
         code = random.randint(1000, 9999)
-        save_record(db_name=db_name, email=receiver_email, code=code)
-        send_email(
-            sender_email=sender_email,
-            password=password,
-            receiver_email=receiver_email,
-            random_auth_code=code,
-        )
+        twofa.save_record(email=receiver_email, code=code)
+        # send_email(
+        #     sender_email=sender_email,
+        #     password=password,
+        #     receiver_email=receiver_email,
+        #     random_auth_code=code,
+        # )
         return "OK"
     except InvalidSignatureError:
         response.status = 403
@@ -110,4 +82,39 @@ def jwt_validate():
         }
 
 
-run(app, host="127.0.0.1", port=port, debug=True, reloader=True, server="paste")
+##############################
+@app.post("/twofa")
+@view("two_fa")
+def two_fa():
+    email = request.forms["email"]
+    code = request.forms["code"]
+    if twofa.evaluate_code(email, code):
+        return
+    else:
+        response.status = 403
+        return {
+            "code": "invalid_auth_code",
+            "description": "Wrong authorization code",
+        }
+
+
+##############################
+@app.get("/2fa")
+@view("two_fa")
+def two_fa():
+    return
+
+
+##############################
+@app.get("/secret_page")
+@view("secret_page")
+def two_fa():
+    return
+
+
+try:
+    import production
+
+    application = app
+except Exception as ex:
+    run(app, host="127.0.0.1", port=port, debug=True, reloader=True, server="paste")

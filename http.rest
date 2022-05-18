@@ -1,4 +1,8 @@
 ###
+POST http://127.0.0.1:3333/validate
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjcHIiOiIyMjEwODUtNDA3OSIsImlhdCI6IjE2NTI4NjgxMjMiLCJleHAiOiIxNjUyODY4NzIzIn0.fu_kARRWjVcXVufm3Ua9Gi2GKD2HtED5kDAA9k1WOTY
+
+###
 POST https://fatsms.com/api-sign-up HTTP/1.1
 Content-Type: application/x-www-form-urlencoded
 
