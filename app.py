@@ -1,11 +1,10 @@
 from bottle import request, response, view, run, static_file
 from dotenv import load_dotenv
 import os
-import random
 import jwt, bottle
 import twofa
+import stub_cpr_registry
 from jwt.exceptions import InvalidSignatureError
-from send_email import send_email
 
 # READ ENV VARS
 load_dotenv()
@@ -26,8 +25,9 @@ app = bottle.Bottle()
 def index():
     return dict(mitid_url=mitid_url)
 
+
 # def validate_jwt(request, response):
-    
+
 
 # def get_cpr():
 
@@ -63,17 +63,13 @@ def _():
         }
 
     try:
-        jwt.decode(parts[1], jwt_secret, algorithm)
+        data = jwt.decode(parts[1], jwt_secret, algorithm)
+        cpr = data["cpr"]
+        print(cpr)
         # TODO generate 4 digit code, send email and save email - code pair in DB
-        code = random.randint(1000, 9999)
-        twofa.save_record(email=receiver_email, code=code)
-        # send_email(
-        #     sender_email=sender_email,
-        #     password=password,
-        #     receiver_email=receiver_email,
-        #     random_auth_code=code,
-        # )
-        return "OK"
+        email = stub_cpr_registry.find_email(cpr)
+        twofa.generate_save_send(email=email)
+        return
     except InvalidSignatureError:
         response.status = 403
         return {
@@ -83,12 +79,13 @@ def _():
 
 
 ##############################
-@app.post("/twofa")
+@app.post("/2fa")
 @view("two_fa")
 def two_fa():
     email = request.forms["email"]
     code = request.forms["code"]
-    if twofa.evaluate_code(email, code):
+    print(email, code)
+    if twofa.verify(email, code):
         return
     else:
         response.status = 403
