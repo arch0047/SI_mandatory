@@ -8,7 +8,6 @@ algorithm = "HS256"
 
 def verify_token():
     auth = request.headers.get("Authorization", None)
-    print(f"AUTH {auth}")
     if not auth:
         response.status = 403
         return {
@@ -36,7 +35,6 @@ def verify_token():
 
     try:
         data = jwt.decode(parts[1], jwt_secret, algorithm)
-        print(data)
         return data
     except InvalidSignatureError:
         response.status = 403

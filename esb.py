@@ -1,8 +1,14 @@
-from bottle import get, post, run, response
-import json, auth
+from bottle import get, post, run, response, request
+import json, auth, uuid, redis
+
+import calendar
+import time
 
 # r.hset("user:12345", mapping={"id": "1", "email": "@a", "token": "12345"})
 # r.hset("user:67890", mapping={"id": "2", "email": "@b", "token": "67890"})
+r = redis.Redis(
+    host="localhost", port=9000, db=0, password="eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81"
+)
 
 messages = [
     {
@@ -23,7 +29,7 @@ messages = [
             "a": "service a",
         }
     },
-]½
+]
 
 ############## THIS IS ABOUT READING MESSAGES
 @get("/provider/<id>/from/<last_message_id>/limit/<limit:int>")
@@ -44,7 +50,6 @@ def _(id, last_message_id, limit):
                 start_index = i + 1
                 break
 
-        print(start_index)
         # validation that index exists
         if start_index == -1:
             raise Exception(f"no message with id {last_message_id}")
@@ -57,9 +62,24 @@ def _(id, last_message_id, limit):
 
 
 ############## THIS IS ABOUT WRITING MESSAGES
-@post("/provider/<id>/from/<last_message_id>/limit/<limit:int>")
-def _(id, last_message_id, limit):
+@post("/provider/<provider_id>/topic/<topic>")
+def _(provider_id, topic):
+    # todo: get the provider id from the token
     auth.verify_token()
+    body = json.load(request.body)
+    message = body["message"]
+    message_id = uuid.uuid1()
+
+    current_GMT = time.gmtime()
+    time_stamp = calendar.timegm(current_GMT)
+    key = (
+        f"provider:{provider_id}/topic:{topic}/uid:{message_id}/timestamp:{time_stamp}"
+    )
+    r.hset(key, "m", message)
+    r.hset(key, "a", provider_id)
+
+
+# message =
 
 
 ##############
