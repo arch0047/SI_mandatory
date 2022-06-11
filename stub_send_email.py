@@ -5,8 +5,8 @@ import random
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-stub_sender_email = "satestastos@gmails.com"
-stub_password = "panJr6Ujt4XVwb"
+stub_sender_email = "systemintegration2023@gmail.com"
+stub_password = "mwyctkhksjvlockr"
 
 
 def send_email(receiver_email, random_auth_code):

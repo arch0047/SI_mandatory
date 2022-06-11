@@ -2,6 +2,7 @@ from bottle import request, response, view, run, static_file
 from dotenv import load_dotenv
 import os
 import jwt, bottle
+import auth
 import twofa
 import stub_cpr_registry
 from jwt.exceptions import InvalidSignatureError
@@ -35,47 +36,14 @@ def index():
 ##############################
 @app.post("/validate")
 def _():
-    auth = request.headers.get("Authorization", None)
-    print(f"AUTH {auth}")
-    if not auth:
-        response.status = 403
-        return {
-            "code": "authorization_header_missing",
-            "description": "Authorization header is expected",
-        }
+    data = auth.verify_token()
+    cpr = data["cpr"]
+    print(cpr)
 
-    parts = auth.split()
-
-    if parts[0].lower() != "bearer":
-        response.status = 403
-        return {
-            "code": "invalid_header",
-            "description": "Authorization header must start with Bearer",
-        }
-    elif len(parts) == 1:
-        response.status = 403
-        return {"code": "invalid_header", "description": "Token not found"}
-    elif len(parts) > 2:
-        response.status = 403
-        return {
-            "code": "invalid_header",
-            "description": "Authorization header must be Bearer + \s + token",
-        }
-
-    try:
-        data = jwt.decode(parts[1], jwt_secret, algorithm)
-        cpr = data["cpr"]
-        print(cpr)
-        # TODO generate 4 digit code, send email and save email - code pair in DB
-        email = stub_cpr_registry.find_email(cpr)
-        twofa.generate_save_send(email=email)
-        return
-    except InvalidSignatureError:
-        response.status = 403
-        return {
-            "code": "invalid_signature",
-            "description": "Token signature is not valid",
-        }
+    # TODO generate 4 digit code, send email and save email - code pair in DB
+    email = stub_cpr_registry.find_email(cpr)
+    twofa.generate_save_send(email=email)
+    return
 
 
 ##############################
