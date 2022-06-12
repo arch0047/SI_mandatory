@@ -1,14 +1,8 @@
 from bottle import get, post, run, response, request
-import json, auth, uuid, redis
-
-import calendar
-import time
+import json, auth, esb_transform as transform
 
 # r.hset("user:12345", mapping={"id": "1", "email": "@a", "token": "12345"})
 # r.hset("user:67890", mapping={"id": "2", "email": "@b", "token": "67890"})
-r = redis.Redis(
-    host="localhost", port=9000, db=0, password="eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81"
-)
 
 messages = [
     {
@@ -66,17 +60,16 @@ def _(id, last_message_id, limit):
 def _(provider_id, topic):
     # todo: get the provider id from the token
     auth.verify_token()
-    body = json.load(request.body)
-    message = body["message"]
-    message_id = uuid.uuid1()
-
-    current_GMT = time.gmtime()
-    time_stamp = calendar.timegm(current_GMT)
-    key = (
-        f"provider:{provider_id}/topic:{topic}/uid:{message_id}/timestamp:{time_stamp}"
+    content_type = request.headers.get("Content-Type", None)
+    if content_type not in transform.allowed_types:
+        response.status = 415
+        return {
+            "code": "invalid_content_type",
+            "description": f"Received: {content_type}, we support: {transform.allowed_types}",
+        }
+    transform.save_message(
+        body=request.body, topic=topic, type=content_type, author=provider_id
     )
-    r.hset(key, "m", message)
-    r.hset(key, "a", provider_id)
 
 
 # message =
